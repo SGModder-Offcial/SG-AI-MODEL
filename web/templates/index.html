@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termux AI Coder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .code-container { background: #1e1e1e; color: #d4d4d4; }
+        #output { white-space: pre-wrap; font-family: 'Courier New', monospace; }
+        .dark-mode { background: #2d2d2d; color: white; }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h3 class="text-primary mb-4">Termux AI Coder</h3>
+                
+                <div class="mb-3">
+                    <textarea id="prompt" class="form-control bg-dark text-light" 
+                              rows="5" placeholder="Enter your code request..."></textarea>
+                </div>
+                
+                <button class="btn btn-primary mb-3" onclick="generateCode()">
+                    Generate Code
+                </button>
+
+                <div class="card bg-dark">
+                    <div class="card-header">
+                        Output
+                        <div class="float-end">
+                            <button class="btn btn-sm btn-success" onclick="copyCode()">
+                                📋 Copy
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="downloadCode()">
+                                ⬇️ Download
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body code-container">
+                        <div id="output"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card bg-dark">
+                    <div class="card-header">History</div>
+                    <div class="card-body" id="history" style="max-height: 400px; overflow-y: auto;">
+                        <!-- History items will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function generateCode() {
+            const prompt = $('#prompt').val();
+            if(!prompt) return;
+
+            $('#output').text('Generating...');
+            $.post('/generate', { prompt: prompt })
+                .done(response => {
+                    $('#output').text(response.response);
+                    addToHistory(prompt, response.response);
+                })
+                .fail(err => {
+                    console.error(err);
+                    $('#output').text('Error: ' + err.responseJSON.error);
+                });
+        }
+
+        function copyCode() {
+            navigator.clipboard.writeText($('#output').text());
+        }
+
+        function downloadCode() {
+            const content = $('#output').text();
+            $.post('/download', { content: content })
+                .done(() => alert('File saved in Termux-AI-Coder/code/'))
+                .fail(err => alert('Error: ' + err.responseJSON.error));
+        }
+
+        function addToHistory(prompt, response) {
+            const historyItem = `
+                <div class="card mb-2 bg-secondary">
+                    <div class="card-body p-2">
+                        <small>${prompt.substring(0, 40)}...</small>
+                        <button class="btn btn-sm float-end text-light" onclick="copyHistoryCode(this)">
+                            📋
+                        </button>
+                        <pre class="d-none">${response}</pre>
+                    </div>
+                </div>`;
+            $('#history').prepend(historyItem);
+        }
+
+        function copyHistoryCode(btn) {
+            const code = $(btn).siblings('pre').text();
+            navigator.clipboard.writeText(code);
+        }
+    </script>
+</body>
+</html>
