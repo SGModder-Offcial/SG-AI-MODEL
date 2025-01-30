@@ -13,5 +13,4 @@ Run DeepSeek-Coder-1.3B locally on Android with a modern web interface!
 
 ## Installation
 ```bash
-# In Termux:
 bash <(curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/Termux-AI-Coder/main/installer/setup.sh)
